@@ -1,50 +1,57 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+class MailParser
+{
+        public void SearchMail(ref string s)
+    {
+        int pos = s.IndexOf('#');
+        if (pos == -1)
+        {
+            s = "";
+        }
+        else
+        {
+            s = s.Substring(pos + 1).Trim();
+        }
+    }
+}
 
 class Program
 {
-    
-    static bool CheckWithIs(object obj)
-    {
-        return obj is IFormattable;
-    }
-
-    
-    static bool CheckWithAs(object obj)
-    {
-        IFormattable f = obj as IFormattable;
-        return f != null;
-    }
-
     static void Main()
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        object[] tests =
-        {
-            42,
-            3.14,
-            12.5m,
-            DateTime.Now,
-            "строка",
-            'a',
-            true,
-            null,
-            new object()
-        };
+        Console.Write("Введите имя входного файла: ");
+        string inputName = Console.ReadLine();
 
-        foreach (object item in tests)
+        if (!File.Exists(inputName))
         {
-            string shown = item == null ? "null" : item.GetType().Name + " (" + item + ")";
-            Console.WriteLine(shown);
-            Console.WriteLine("  is: " + CheckWithIs(item) + ", as: " + CheckWithAs(item));
+            Console.WriteLine("Файл \"" + inputName + "\" не найден. Программа завершена.");
+            return;
         }
 
-        Console.WriteLine();
-        object number = 1234.5678;
-        IFormattable formattable = number as IFormattable;
-        if (formattable != null)
+        MailParser parser = new MailParser();
+        string[] lines = File.ReadAllLines(inputName);
+        List<string> emails = new List<string>();
+
+        foreach (string line in lines)
         {
-            Console.WriteLine("Число с форматом F2: " + formattable.ToString("F2", null));
+            string s = line;
+            parser.SearchMail(ref s);
+
+            if (s != "")
+            {
+                emails.Add(s);
+            }
         }
+
+        string outputName = "emails.txt";
+        File.WriteAllLines(outputName, emails);
+
+        Console.WriteLine("Найдено адресов: " + emails.Count);
+        Console.WriteLine("Список сохранен в файл: " + Path.GetFullPath(outputName));
     }
 }
