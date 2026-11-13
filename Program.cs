@@ -1,100 +1,148 @@
 ﻿using System;
 using System.Collections.Generic;
 
-class Song
+enum Group
 {
-    private string name;
-    private string author;
-    private Song prev;
+    Director,
+    Accounting,
+    Management,
+    Systems,
+    Developers
+}
 
-    public void SetName(string value)
+class Employee
+{
+    public string Name { get; set; }
+    public Group Group { get; set; }
+    private List<Employee> bosses = new List<Employee>();
+
+    public Employee(string name, Group group)
     {
-        name = value;
+        Name = name;
+        Group = group;
     }
 
-    public void SetAuthor(string value)
+    public void AddBoss(Employee boss)
     {
-        author = value;
+        bosses.Add(boss);
     }
 
-    public void SetPrev(Song value)
+    public bool IsDirectBoss(Employee other)
     {
-        prev = value;
+        return bosses.Contains(other);
     }
 
-    public string Title()
+    public bool TakesTask(Employee from, WorkTask task)
     {
-        return name + " - " + author;
-    }
-
-    public void Print()
-    {
-        Console.WriteLine("Песня: " + Title());
-        if (prev != null)
-        {
-            Console.WriteLine("  Предыдущая: " + prev.Title());
-        }
-        else
-        {
-            Console.WriteLine("  Предыдущей песни нет");
-        }
-    }
-
-    public override bool Equals(object d)
-    {
-        Song other = d as Song;
-        if (other == null)
+        if (!IsDirectBoss(from))
         {
             return false;
         }
-        return name == other.name && author == other.author;
+        return task.Target == Group;
     }
+}
 
-    public override int GetHashCode()
+class WorkTask
+{
+    public string Title { get; set; }
+    public Group Target { get; set; }
+
+    public WorkTask(string title, Group target)
     {
-        return (name + author).GetHashCode();
+        Title = title;
+        Target = target;
     }
 }
 
 class Program
 {
+    static void Assign(Employee from, Employee to, WorkTask task)
+    {
+        Console.Write("От " + from.Name + " задача \"" + task.Title + "\" -> " + to.Name + ": ");
+
+        if (!to.IsDirectBoss(from))
+        {
+            Console.WriteLine("НЕ берет (" + from.Name + " не прямой руководитель)");
+        }
+        else if (task.Target != to.Group)
+        {
+            Console.WriteLine("НЕ берет (задача не для его группы)");
+        }
+        else
+        {
+            Console.WriteLine("берет");
+        }
+    }
+
     static void Main()
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Song s1 = new Song();
-        s1.SetName("Группа крови");
-        s1.SetAuthor("Кино");
+        Employee timur = new Employee("Тимур", Group.Director);
 
-        Song s2 = new Song();
-        s2.SetName("Звезда по имени Солнце");
-        s2.SetAuthor("Кино");
-        s2.SetPrev(s1);
+        Employee rashid = new Employee("Рашид", Group.Accounting);
+        Employee ilham = new Employee("Ильхам", Group.Management);
+        rashid.AddBoss(timur);
+        ilham.AddBoss(timur);
 
-        Song s3 = new Song();
-        s3.SetName("Знаешь ли ты");
-        s3.SetAuthor("Ария");
-        s3.SetPrev(s2);
+        Employee lukas = new Employee("Лукас", Group.Accounting);
+        lukas.AddBoss(rashid);
 
-        Song s4 = new Song();
-        s4.SetName("Группа крови");
-        s4.SetAuthor("Кино");
-        s4.SetPrev(s3);
+        Employee orkadiy = new Employee("Оркадий", Group.Management);
+        Employee volodya = new Employee("Володя", Group.Management);
+        orkadiy.AddBoss(ilham);
+        volodya.AddBoss(orkadiy);
 
-        List<Song> list = new List<Song>();
-        list.Add(s1);
-        list.Add(s2);
-        list.Add(s3);
-        list.Add(s4);
+        Employee ilshat = new Employee("Ильшат", Group.Systems);
+        Employee ivanych = new Employee("Иваныч", Group.Systems);
+        Employee ilya = new Employee("Илья", Group.Systems);
+        Employee vitya = new Employee("Витя", Group.Systems);
+        Employee zhenya = new Employee("Женя", Group.Systems);
+        ilshat.AddBoss(orkadiy);
+        ilshat.AddBoss(volodya);
+        ivanych.AddBoss(ilshat);
+        ilya.AddBoss(ivanych);
+        vitya.AddBoss(ivanych);
+        zhenya.AddBoss(ivanych);
 
-        Console.WriteLine("=== Список песен ===");
-        foreach (Song song in list)
-        {
-            song.Print();
-        }
+        Employee sergey = new Employee("Сергей", Group.Developers);
+        Employee lyaysan = new Employee("Ляйсан", Group.Developers);
+        Employee marat = new Employee("Марат", Group.Developers);
+        Employee dina = new Employee("Дина", Group.Developers);
+        Employee ildar = new Employee("Ильдар", Group.Developers);
+        Employee anton = new Employee("Антон", Group.Developers);
+        sergey.AddBoss(orkadiy);
+        sergey.AddBoss(volodya);
+        lyaysan.AddBoss(sergey);
+        marat.AddBoss(lyaysan);
+        dina.AddBoss(lyaysan);
+        ildar.AddBoss(lyaysan);
+        anton.AddBoss(lyaysan);
+
+        WorkTask t1 = new WorkTask("Автоматизировать отчет бухгалтерии", Group.Developers);
+        WorkTask t2 = new WorkTask("Настроить сеть в офисе", Group.Systems);
+        WorkTask t3 = new WorkTask("Утвердить план автоматизации", Group.Management);
+
+        Console.WriteLine("=== Распределение задач ===");
+        Console.WriteLine();
+
+        Assign(ilham, orkadiy, t3);
+        Assign(orkadiy, sergey, t1);
+        Assign(sergey, lyaysan, t1);
+        Assign(lyaysan, dina, t1);
+        Assign(lyaysan, marat, t1);
+        Assign(timur, dina, t1);
+        Assign(sergey, marat, t1);
 
         Console.WriteLine();
-        Console.WriteLine("Первая и вторая песни одинаковые: " + list[0].Equals(list[1]));
-        Console.WriteLine("Первая и четвертая песни одинаковые: " + list[0].Equals(list[3]));
+        Assign(orkadiy, ilshat, t2);
+        Assign(ilshat, ivanych, t2);
+        Assign(ivanych, ilya, t2);
+        Assign(ivanych, dina, t2);
+        Assign(ivanych, vitya, t1);
+        Assign(lyaysan, ilya, t2);
+
+        Console.WriteLine();
+        Assign(rashid, lukas, t3);
     }
 }
