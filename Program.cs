@@ -1,31 +1,31 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 
 class Program
 {
-    static string Reverse(string text)
-    {
-        if(text==null)
-        {
-            return "";
-        }
-        string result="";
-        for(int i = text.Length - 1; i>=0; i--)
-        {
-            result += text[i];
-        }
-        return result;
-
-    }
     static void Main()
     {
-        string[] tests={ "привет", "Hello World", "шалаш", "a", "", null };
-        foreach(string s in tests)
+        Console.OutputEncoding = Encoding.UTF8;
+
+        Console.Write("Введите имя файла: ");
+        string name = Console.ReadLine();
+
+        
+        if (!File.Exists(name))
         {
-            string shown = s == null ? "null" : "\"" + s + "\"";
-            Console.WriteLine("Исходная: " + shown + " -> перевернутая: \"" + Reverse(s) + "\"");   
+            Console.WriteLine("Файл \"" + name + "\" не найден. Программа завершена.");
+            return;
         }
-        Console.Write("\nВведите свою строку: ");
-        string input = Console.ReadLine();
-        Console.WriteLine("Результат: " + Reverse(input));
+
+        
+        string text = File.ReadAllText(name);
+        string upper = text.ToUpper();
+
+        
+        string outputName = "output.txt";
+        File.WriteAllText(outputName, upper);
+
+        Console.WriteLine("Готово. Результат записан в файл: " + Path.GetFullPath(outputName));
     }
 }
