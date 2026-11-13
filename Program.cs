@@ -1,31 +1,50 @@
 ﻿using System;
-using System.IO;
-using System.Text;
 
 class Program
 {
+    
+    static bool CheckWithIs(object obj)
+    {
+        return obj is IFormattable;
+    }
+
+    
+    static bool CheckWithAs(object obj)
+    {
+        IFormattable f = obj as IFormattable;
+        return f != null;
+    }
+
     static void Main()
     {
-        Console.OutputEncoding = Encoding.UTF8;
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        Console.Write("Введите имя файла: ");
-        string name = Console.ReadLine();
-
-        
-        if (!File.Exists(name))
+        object[] tests =
         {
-            Console.WriteLine("Файл \"" + name + "\" не найден. Программа завершена.");
-            return;
+            42,
+            3.14,
+            12.5m,
+            DateTime.Now,
+            "строка",
+            'a',
+            true,
+            null,
+            new object()
+        };
+
+        foreach (object item in tests)
+        {
+            string shown = item == null ? "null" : item.GetType().Name + " (" + item + ")";
+            Console.WriteLine(shown);
+            Console.WriteLine("  is: " + CheckWithIs(item) + ", as: " + CheckWithAs(item));
         }
 
-        
-        string text = File.ReadAllText(name);
-        string upper = text.ToUpper();
-
-        
-        string outputName = "output.txt";
-        File.WriteAllText(outputName, upper);
-
-        Console.WriteLine("Готово. Результат записан в файл: " + Path.GetFullPath(outputName));
+        Console.WriteLine();
+        object number = 1234.5678;
+        IFormattable formattable = number as IFormattable;
+        if (formattable != null)
+        {
+            Console.WriteLine("Число с форматом F2: " + formattable.ToString("F2", null));
+        }
     }
 }
